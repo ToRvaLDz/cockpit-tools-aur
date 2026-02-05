@@ -24,7 +24,8 @@ jobs:
             pacman -Sy --noconfirm git curl jq &&
             useradd -m build &&
             chown -R build:build . &&
-            sudo -u build bash ./update.sh
+            sudo -u build bash ./update.sh &&
+            chown -R $(id -u):$(id -g) .
           "
           
       - name: Load update results
