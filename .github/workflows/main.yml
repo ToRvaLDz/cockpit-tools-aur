@@ -26,8 +26,10 @@ jobs:
       - name: Check for updates and update files
         id: check
         run: |
-          # Esegui lo script come utente 'build'
-          sudo -u build ./update.sh
+          ls -la
+          cat update.sh
+          # Esegui lo script come utente 'build' con debug
+          sudo -u build bash -x ./update.sh
         
       - name: Configure Git
         if: env.UPDATED == 'true'
