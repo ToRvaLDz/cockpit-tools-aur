@@ -51,7 +51,9 @@ jobs:
         if: env.UPDATED == 'true'
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur_key
+          cat <<'EOF' > ~/.ssh/aur_key
+          ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          EOF
           chmod 600 ~/.ssh/aur_key
           
           # Avvia ssh-agent e aggiungi la chiave
