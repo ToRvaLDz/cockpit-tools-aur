@@ -20,7 +20,7 @@ jobs:
         run: |
           # Facciamo girare lo script di aggiornamento dentro un container Arch
           # Passiamo la cartella corrente al container
-          docker run --rm -v $((pwd)):/pkg -w /pkg archlinux:base-devel bash -c "
+          docker run --rm -v $(pwd):/pkg -w /pkg archlinux:base-devel bash -c "
             pacman -Sy --noconfirm git curl jq &&
             useradd -m build &&
             chown -R build:build . &&
