@@ -2,41 +2,40 @@ name: Update AUR Package
 
 on:
   schedule:
-    - cron: '0 * * * *' # Controlla ogni ora
-  workflow_dispatch: # Permette di lanciarlo manualmente
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   update-aur:
     runs-on: ubuntu-latest
-    container: archlinux:base-devel # Usa Arch Linux per avere makepkg
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Install dependencies
-        run: |
-          pacman -Sy --noconfirm git curl jq
-          # Crea un utente non-root chiamato 'build' e dagli i permessi di sudo
-          useradd -m build
-          echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
-          # Permetti a build di scrivere nella cartella del workspace
-          chown -R build:build .
+        with:
+          fetch-depth: 0 # Necessario per poter pushare le modifiche
 
-      - name: Check for updates and update files
-        id: check
+      - name: Update PKGBUILD using Arch Linux container
+        id: update
         run: |
-          # Esegui lo script come utente 'build'
-          sudo -u build bash ./update.sh
-          # Se il file esiste, importa i valori nel workflow env
+          # Facciamo girare lo script di aggiornamento dentro un container Arch
+          # Passiamo la cartella corrente al container
+          docker run --rm -v $((pwd)):/pkg -w /pkg archlinux:base-devel bash -c "
+            pacman -Sy --noconfirm git curl jq &&
+            useradd -m build &&
+            chown -R build:build . &&
+            sudo -u build bash ./update.sh
+          "
+          
+      - name: Load update results
+        run: |
           if [ -f update_result.txt ]; then
             cat update_result.txt >> $GITHUB_ENV
           fi
-        
+
       - name: Configure Git
         if: env.UPDATED == 'true'
         run: |
-          git config --global --add safe.directory /__w/cockpit-tools/cockpit-tools
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -63,19 +62,12 @@ jobs:
           
           mkdir aur-repo
           cd aur-repo
-          
           git init
           git config user.name "${{ secrets.AUR_USERNAME }}"
           git config user.email "${{ secrets.AUR_EMAIL }}"
-          
           git remote add origin "ssh://aur@aur.archlinux.org/cockpit-tools-bin.git"
           
-          # Copia i file
           cp ../PKGBUILD ../.SRCINFO .
-          
-          # Aggiungi e committa
           git add PKGBUILD .SRCINFO
           git commit -m "Update to version ${{ env.VERSION }}"
-          
-          # Push forzato per la prima creazione o per allineare lo stato
           git push -f origin master
