@@ -52,13 +52,15 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur_key
-          if [ $(tail -c1 ~/.ssh/aur_key | wc -l) -eq 0 ]; then echo "" >> ~/.ssh/aur_key; fi
           chmod 600 ~/.ssh/aur_key
+          
+          # Avvia ssh-agent e aggiungi la chiave
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/aur_key
           
           cat <<EOF > ~/.ssh/config
           Host aur.archlinux.org
             User aur
-            IdentityFile ~/.ssh/aur_key
             StrictHostKeyChecking no
           EOF
           
