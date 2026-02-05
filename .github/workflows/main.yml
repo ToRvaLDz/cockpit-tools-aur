@@ -44,8 +44,8 @@ jobs:
         if: env.UPDATED == 'true'
         run: |
           git add PKGBUILD .SRCINFO
-          git commit -m "Update to version ${{ env.VERSION }}"
-          git push
+          git commit -m "Update to version ${{ env.VERSION }}" || echo "No changes to commit"
+          git push || echo "No changes to push"
 
       - name: Publish to AUR
         if: env.UPDATED == 'true'
