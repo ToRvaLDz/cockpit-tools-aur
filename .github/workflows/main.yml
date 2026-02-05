@@ -17,11 +17,17 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Sy --noconfirm git curl jq
-          # git e curl servono per lo script, jq è utile per parsing json se necessario
+          # Crea un utente non-root chiamato 'build' e dagli i permessi di sudo
+          useradd -m build
+          echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
+          # Permetti a build di scrivere nella cartella del workspace
+          chown -R build:build .
 
       - name: Check for updates and update files
         id: check
-        run: ./update.sh
+        run: |
+          # Esegui lo script come utente 'build'
+          sudo -u build ./update.sh
         
       - name: Configure Git
         if: env.UPDATED == 'true'
