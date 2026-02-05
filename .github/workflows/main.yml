@@ -39,11 +39,11 @@ jobs:
 
       - name: Publish to AUR
         if: env.UPDATED == 'true'
-        uses: kskeid/aur-package-update@v2 # Usiamo un'action affidabile per la parte SSH/AUR
+        uses: KSX-ZEALOT/aur-publisher@v4
         with:
           pkgname: cockpit-tools-bin
           pkgbuild: ./PKGBUILD
-          srcinfo: ./.SRCINFO
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to version ${{ env.VERSION }}"
