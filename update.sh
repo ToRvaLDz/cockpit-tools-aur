@@ -44,6 +44,6 @@ makepkg --printsrcinfo > .SRCINFO
 # Pulizia
 rm "/tmp/$DEB_FILENAME"
 
-# Segnala a GitHub Actions che c'è stato un aggiornamento
-echo "UPDATED=true" >> $GITHUB_ENV
-echo "VERSION=$LATEST_VER" >> $GITHUB_ENV
+# Segnala il risultato creando un file
+echo "UPDATED=true" > update_result.txt
+echo "VERSION=$LATEST_VER" >> update_result.txt

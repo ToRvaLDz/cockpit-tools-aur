@@ -26,8 +26,12 @@ jobs:
       - name: Check for updates and update files
         id: check
         run: |
-          # Esegui lo script come utente 'build' passando le variabili d'ambiente necessarie
-          sudo -u build GITHUB_ENV=$GITHUB_ENV bash ./update.sh
+          # Esegui lo script come utente 'build'
+          sudo -u build bash ./update.sh
+          # Se il file esiste, importa i valori nel workflow env
+          if [ -f update_result.txt ]; then
+            cat update_result.txt >> $GITHUB_ENV
+          fi
         
       - name: Configure Git
         if: env.UPDATED == 'true'
