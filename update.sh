@@ -15,12 +15,7 @@ CURRENT_VER=$(grep "^pkgver=" "$PKGBUILD_FILE" | cut -d'=' -f2)
 echo "Versione attuale locale: $CURRENT_VER"
 echo "Ultima versione upstream: $LATEST_VER"
 
-if [ "$LATEST_VER" == "$CURRENT_VER" ]; then
-    echo "Il pacchetto è già aggiornato."
-    exit 0
-fi
-
-echo "Aggiornamento trovato! Procedo..."
+echo "FORZATURA: Procedo all'aggiornamento indipendentemente dalla versione..."
 
 # 2. Aggiorna la versione nel PKGBUILD
 sed -i "s/^pkgver=.*/pkgver=$LATEST_VER/" "$PKGBUILD_FILE"
