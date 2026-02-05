@@ -52,6 +52,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur_key
+          if [ $(tail -c1 ~/.ssh/aur_key | wc -l) -eq 0 ]; then echo "" >> ~/.ssh/aur_key; fi
           chmod 600 ~/.ssh/aur_key
           
           cat <<EOF > ~/.ssh/config
