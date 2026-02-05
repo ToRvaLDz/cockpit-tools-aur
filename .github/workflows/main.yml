@@ -39,11 +39,42 @@ jobs:
 
       - name: Publish to AUR
         if: env.UPDATED == 'true'
-        uses: KSX-ZEALOT/aur-publisher@v4
-        with:
-          pkgname: cockpit-tools-bin
-          pkgbuild: ./PKGBUILD
-          commit_username: ${{ secrets.AUR_USERNAME }}
-          commit_email: ${{ secrets.AUR_EMAIL }}
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: "Update to version ${{ env.VERSION }}"
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur_key
+          chmod 600 ~/.ssh/aur_key
+          
+          # Configura SSH per usare la chiave corretta per AUR
+          cat <<EOF > ~/.ssh/config
+          Host aur.archlinux.org
+            User aur
+            IdentityFile ~/.ssh/aur_key
+            StrictHostKeyChecking no
+          EOF
+          
+          # Clona la repo AUR (o inizializzala se non vogliamo clonare tutto)
+          # Usiamo una cartella temporanea per non sporcare il workspace
+          mkdir aur-repo
+          cd aur-repo
+          
+          # Configura git
+          git init
+          git config user.name "${{ secrets.AUR_USERNAME }}"
+          git config user.email "${{ secrets.AUR_EMAIL }}"
+          
+          # Aggiungi il remote
+          git remote add origin "ssh://aur@aur.archlinux.org/cockpit-tools-bin.git"
+          
+          # Fetch per non sovrascrivere brutalmente
+          git fetch origin master || echo "Repo remota vuota o inesistente"
+          
+          # Se esiste il ramo master remoto, facciamo reset su di esso, altrimenti siamo al primo commit
+          git reset --soft origin/master || echo "Primo commit"
+          
+          # Copia i file aggiornati dalla root del workspace dentro la cartella aur-repo
+          cp ../PKGBUILD ../.SRCINFO .
+          
+          # Aggiungi, committa e pusha
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to version ${{ env.VERSION }}"
+          git push -u origin master
