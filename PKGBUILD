@@ -1,6 +1,6 @@
 # Maintainer: Gemini CLI Agent
 pkgname=cockpit-tools-bin
-pkgver=0.5.3
+pkgver=0.5.1
 pkgrel=1
 pkgdesc="A tool for managing Cockpit (Tauri-based)"
 arch=('x86_64')
