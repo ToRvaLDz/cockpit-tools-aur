@@ -6,7 +6,21 @@ REPO="jlcodes99/cockpit-tools"
 PKGBUILD_FILE="PKGBUILD"
 
 # 1. Ottieni l'ultima versione da GitHub API
-LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
+AUTH_HEADER=""
+if [ -n "$GITHUB_TOKEN" ]; then
+    AUTH_HEADER="Authorization: token $GITHUB_TOKEN"
+fi
+
+RESPONSE=$(curl -s ${AUTH_HEADER:+-H "$AUTH_HEADER"} "https://api.github.com/repos/$REPO/releases/latest")
+LATEST_TAG=$(echo "$RESPONSE" | grep -Po '"tag_name": "\K.*?(?=")')
+
+if [ -z "$LATEST_TAG" ]; then
+    echo "Errore: Impossibile recuperare l'ultima tag da GitHub."
+    echo "Risposta API:"
+    echo "$RESPONSE"
+    exit 1
+fi
+
 LATEST_VER=${LATEST_TAG#v}
 
 # Leggi la versione attuale dal PKGBUILD

@@ -5,6 +5,9 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-aur:
     runs-on: ubuntu-latest
@@ -13,18 +16,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necessario per poter pushare le modifiche
+          fetch-depth: 0
 
       - name: Update PKGBUILD using Arch Linux container
         id: update
         run: |
           # Facciamo girare lo script di aggiornamento dentro un container Arch
-          # Passiamo la cartella corrente al container
-          docker run --rm -v $(pwd):/pkg -w /pkg archlinux:base-devel bash -c "
-            pacman -Sy --noconfirm git curl jq &&
+          docker run --rm -v $(pwd):/pkg -w /pkg -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} archlinux:latest bash -c "
+            pacman -Syu --noconfirm base-devel git curl jq sudo &&
             useradd -m build &&
+            echo 'build ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers &&
             chown -R build:build . &&
-            sudo -u build bash ./update.sh &&
+            sudo -u build GITHUB_TOKEN=$GITHUB_TOKEN bash ./update.sh &&
             chown -R $(id -u):$(id -g) .
           "
           
@@ -66,14 +69,12 @@ jobs:
             StrictHostKeyChecking no
           EOF
           
-          mkdir aur-repo
+          git clone "ssh://aur@aur.archlinux.org/cockpit-tools-bin.git" aur-repo
           cd aur-repo
-          git init
           git config user.name "${{ secrets.AUR_USERNAME }}"
           git config user.email "${{ secrets.AUR_EMAIL }}"
-          git remote add origin "ssh://aur@aur.archlinux.org/cockpit-tools-bin.git"
           
           cp ../PKGBUILD ../.SRCINFO .
           git add PKGBUILD .SRCINFO
-          git commit -m "Update to version ${{ env.VERSION }}"
-          git push -f origin master
+          git commit -m "Update to version ${{ env.VERSION }}" || echo "No changes to commit"
+          git push origin master
